@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>de.bottify</groupId>
+        <artifactId>bottify</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>bottify-bootstrap</artifactId>
+    <name>Bottify :: Bootstrap</name>
+    <description>
+        The composition root and single deployable artifact (ADR-0002). This is the ONLY
+        module that knows every adapter: it depends on all of them, component-scans them,
+        and wires the framework-agnostic application services into Spring beans. It also
+        owns cross-cutting production concerns (Actuator health/metrics) and produces the
+        executable jar that gets containerized (ADR-0007).
+    </description>
+
+    <dependencies>
+        <!-- Every adapter is assembled here (each transitively brings application + domain) -->
+        <dependency>
+            <groupId>de.bottify</groupId>
+            <artifactId>bottify-adapter-rest</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.bottify</groupId>
+            <artifactId>bottify-adapter-persistence</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.bottify</groupId>
+            <artifactId>bottify-adapter-filestore</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.bottify</groupId>
+            <artifactId>bottify-adapter-transcoder</artifactId>
+        </dependency>
+
+        <!--
+          Secret management: fetch MariaDB credentials from the remote HashiCorp Vault at
+          startup (ADR-0008). This is deliberately here in the composition root, not in the
+          persistence adapter — Vault supplies spring.datasource.* via config-data, and the
+          adapter stays unaware of where credentials come from.
+        -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-vault-config</artifactId>
+        </dependency>
+
+        <!-- Cross-cutting: observability (see the architecture overview) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <!--
+                      TODO: remove this line once de.bottify.BottifyApplication (the
+                      @SpringBootApplication main class) exists. Until then, repackaging
+                      into an executable jar is skipped so the skeleton builds green.
+                    -->
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

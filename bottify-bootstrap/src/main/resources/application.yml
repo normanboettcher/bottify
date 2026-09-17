@@ -1,0 +1,63 @@
+# Bottify — base configuration.
+# 12-factor: real values come from the environment/secrets at deploy time (ADR-0007).
+# This file only declares the shape; fill in profiles/env vars as you implement.
+
+spring:
+  application:
+    name: bottify
+
+  # Fetch secrets (MariaDB credentials) from the remote HashiCorp Vault at startup (ADR-0008).
+  # With the 'local' profile active this is disabled (see the profile block at the bottom).
+  config:
+    import: "vault://"
+
+  cloud:
+    vault:
+      uri: ${VAULT_URI:https://vault.example.com:8200}   # remote cloud Vault, over TLS
+      authentication: ${VAULT_AUTH:APPROLE}
+      app-role:
+        role-id: ${VAULT_ROLE_ID:}
+        secret-id: ${VAULT_SECRET_ID:}
+
+      # Dynamic MariaDB credentials via Vault's database secrets engine.
+      # Vault issues a short-lived user and injects spring.datasource.username/password.
+      database:
+        enabled: true
+        role: ${VAULT_DB_ROLE:bottify}   # Vault DB role that mints MariaDB users
+        backend: database
+      # Renew/rotate the leases on those dynamic credentials (ADR-0008 consequences):
+      config:
+        lifecycle:
+          enabled: true
+
+  datasource:
+    url: ${BOTTIFY_DB_URL:jdbc:mariadb://localhost:3306/bottify}
+
+  jpa:
+    hibernate:
+      # Flyway owns the schema; JPA only validates it matches the entities.
+      ddl-auto: validate
+    open-in-view: false
+
+  # Schema migrations live in the persistence adapter (classpath:db/migration).
+  flyway:
+    enabled: false
+
+# Observability (architecture overview → Production readiness).
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+# Application-specific knobs, bound by the outbound adapters via @ConfigurationProperties.
+bottify:
+  storage:
+    media-root: ${BOTTIFY_MEDIA_ROOT:/srv/bottify/media}   # filestore adapter (ADR-0006)
+  transcoder:
+    ffmpeg-path: ${BOTTIFY_FFMPEG_PATH:ffmpeg}             # transcoder adapter (ADR-0006)
+    cache-dir: ${BOTTIFY_TRANSCODE_CACHE:/srv/bottify/cache}

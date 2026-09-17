@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>de.bottify</groupId>
+        <artifactId>bottify</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>bottify-adapter-filestore</artifactId>
+    <name>Bottify :: Adapter :: Filestore</name>
+    <description>
+        Outbound (driven) adapter for audio files on the filesystem (ADR-0005/0006):
+        stores/locates FLAC files, reads raw bytes with range support for streaming, and
+        reads tags + embedded cover art via JAudiotagger. Implements the storage/metadata
+        outbound ports. Uses spring-boot-starter for @ConfigurationProperties (e.g. the
+        media root path) — an adapter may depend on the framework; the core may not.
+    </description>
+
+    <dependencies>
+        <dependency>
+            <groupId>de.bottify</groupId>
+            <artifactId>bottify-application</artifactId>
+        </dependency>
+
+        <!-- Lightweight Spring wiring + typed config binding for the media root path -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+        </dependency>
+
+        <!-- Read audio metadata and embedded artwork (ADR-0004) -->
+        <dependency>
+            <groupId>net.jthink</groupId>
+            <artifactId>jaudiotagger</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>

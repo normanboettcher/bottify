@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>de.bottify</groupId>
+        <artifactId>bottify</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>bottify-domain</artifactId>
+    <name>Bottify :: Domain</name>
+    <description>
+        The heart of the hexagon: entities, value objects and domain logic
+        (artists, albums, tracks, playlists, users). Pure Java by design — NO Spring,
+        NO JPA, NO framework dependency may be added here. Everything else points inward
+        to this module; this module points at nothing.
+    </description>
+
+    <dependencies>
+        <!--
+          Intentionally empty of compile dependencies. If you ever feel the urge to add
+          a framework here, that logic belongs in an adapter instead.
+          Test-only dependencies are fine.
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>
