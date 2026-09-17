@@ -18,10 +18,6 @@ spring:
       app-role:
         role-id: ${VAULT_ROLE_ID:}
         secret-id: ${VAULT_SECRET_ID:}
-      # If Vault uses a private CA, point at a trust store:
-      # ssl:
-      #   trust-store: file:/etc/bottify/vault-truststore.jks
-      #   trust-store-password: ${VAULT_TRUSTSTORE_PASSWORD:}
 
       # Dynamic MariaDB credentials via Vault's database secrets engine.
       # Vault issues a short-lived user and injects spring.datasource.username/password.
@@ -34,19 +30,8 @@ spring:
         lifecycle:
           enabled: true
 
-      # --- Simpler alternative: static KV v2 instead of the database engine ---
-      # kv:
-      #   enabled: true
-      #   backend: secret
-      #   application-name: bottify
-      # Then store spring.datasource.username/password as keys under secret/bottify.
-
-  # MariaDB (ADR-0005). The URL is plain config; username/password come from Vault above
-  # (or from the environment when running with the 'local' profile).
   datasource:
     url: ${BOTTIFY_DB_URL:jdbc:mariadb://localhost:3306/bottify}
-    username: ${BOTTIFY_DB_USER:}
-    password: ${BOTTIFY_DB_PASSWORD:}
 
   jpa:
     hibernate:
@@ -56,7 +41,7 @@ spring:
 
   # Schema migrations live in the persistence adapter (classpath:db/migration).
   flyway:
-    enabled: true
+    enabled: false
 
 # Observability (architecture overview → Production readiness).
 management:
@@ -76,15 +61,3 @@ bottify:
   transcoder:
     ffmpeg-path: ${BOTTIFY_FFMPEG_PATH:ffmpeg}             # transcoder adapter (ADR-0006)
     cache-dir: ${BOTTIFY_TRANSCODE_CACHE:/srv/bottify/cache}
-
----
-# Local development profile (ADR-0008): Vault runs only in the cloud, so don't require it
-# here. Run with -Dspring.profiles.active=local and provide DB creds via BOTTIFY_DB_USER /
-# BOTTIFY_DB_PASSWORD instead.
-spring:
-  config:
-    activate:
-      on-profile: local
-  cloud:
-    vault:
-      enabled: false
