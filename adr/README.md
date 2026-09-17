@@ -25,3 +25,4 @@ itself, and the **consequences** we accept as a result.
 | [0005](0005-mariadb-metadata-files-on-disk.md) | Metadata in MariaDB, audio on the filesystem | Accepted |
 | [0006](0006-lossless-storage-on-the-fly-transcode.md) | Store lossless, transcode on the fly | Accepted |
 | [0007](0007-docker-compose-caddy-deployment.md) | Deploy with Docker Compose behind Caddy | Accepted |
+| [0008](0008-mariadb-credentials-from-vault.md) | MariaDB credentials retrieved from HashiCorp Vault (remote) | Accepted |

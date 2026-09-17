@@ -22,8 +22,9 @@ Define the whole runtime as containers in a single `docker-compose.yml`:
   `mariadb-dump`) to off-site storage.
 
 State lives in two named volumes: the media directory and the MariaDB data directory.
-Configuration is injected via environment/Docker secrets (12-factor); nothing
-environment-specific is baked into the image.
+Configuration is injected via environment (12-factor); nothing environment-specific is baked
+into the image. **Database credentials specifically come from a remote HashiCorp Vault**, not
+from env/Docker secrets — see [ADR-0008](0008-mariadb-credentials-from-vault.md).
 
 ## Consequences
 

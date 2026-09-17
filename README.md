@@ -11,6 +11,7 @@ Spring Boot backend, with lossless FLAC storage and on-the-fly transcoding.
 
 - **Backend:** Java 25 (current LTS), Spring Boot 4.0.x
 - **Database:** MariaDB 11 LTS (Flyway migrations) — metadata only; audio stays on disk
+- **Secrets:** MariaDB credentials fetched from a remote HashiCorp Vault (Spring Cloud Vault)
 - **Search:** deferred to a dedicated Elasticsearch service in a later phase
 - **Audio:** FLAC stored lossless, transcoded on the fly via ffmpeg
 - **Deployment:** Docker Compose behind Caddy (automatic HTTPS)
@@ -36,7 +37,7 @@ them in parallel.
 | `bottify-adapter-persistence` | **Outbound (driven) adapter for MariaDB.** Implements the repository ports with Spring Data JPA and owns the JPA entities and the Flyway migrations (`db/migration/`). The DB holds metadata only. Touch this to change how data is stored or to add a schema migration. |
 | `bottify-adapter-filestore` | **Outbound adapter for audio on disk.** Stores/locates FLAC files, reads bytes with range support for streaming, and reads tags + cover art via JAudiotagger. Touch this to change how files are read from or written to the media directory. |
 | `bottify-adapter-transcoder` | **Outbound adapter for transcoding.** Implements the transcoding port by invoking `ffmpeg` and streaming its output. Touch this to change transcode formats, bitrates, or caching. |
-| `bottify-bootstrap` | **The composition root and only deployable.** Depends on all adapters, component-scans them, wires the framework-free application services into Spring beans, and owns cross-cutting concerns (Actuator/metrics) and `application.yml`. This is the module you run and containerize. Touch it for app-wide config and bean wiring. |
+| `bottify-bootstrap` | **The composition root and only deployable.** Depends on all adapters, component-scans them, wires the framework-free application services into Spring beans, and owns cross-cutting concerns (Actuator/metrics), secret retrieval from HashiCorp Vault (Spring Cloud Vault), and `application.yml`. This is the module you run and containerize. Touch it for app-wide config and bean wiring. |
 
 > **Rule of thumb:** business logic goes *inward* (domain/application); anything that talks
 > to the outside world — HTTP, the database, the filesystem, ffmpeg — goes in an *adapter*.

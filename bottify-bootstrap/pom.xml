@@ -39,6 +39,17 @@
             <artifactId>bottify-adapter-transcoder</artifactId>
         </dependency>
 
+        <!--
+          Secret management: fetch MariaDB credentials from the remote HashiCorp Vault at
+          startup (ADR-0008). This is deliberately here in the composition root, not in the
+          persistence adapter — Vault supplies spring.datasource.* via config-data, and the
+          adapter stays unaware of where credentials come from.
+        -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-vault-config</artifactId>
+        </dependency>
+
         <!-- Cross-cutting: observability (see the architecture overview) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

@@ -6,10 +6,46 @@ spring:
   application:
     name: bottify
 
-  # MariaDB (ADR-0005). Credentials injected via environment, never committed.
+  # Fetch secrets (MariaDB credentials) from the remote HashiCorp Vault at startup (ADR-0008).
+  # With the 'local' profile active this is disabled (see the profile block at the bottom).
+  config:
+    import: "vault://"
+
+  cloud:
+    vault:
+      uri: ${VAULT_URI:https://vault.example.com:8200}   # remote cloud Vault, over TLS
+      authentication: ${VAULT_AUTH:APPROLE}
+      app-role:
+        role-id: ${VAULT_ROLE_ID:}
+        secret-id: ${VAULT_SECRET_ID:}
+      # If Vault uses a private CA, point at a trust store:
+      # ssl:
+      #   trust-store: file:/etc/bottify/vault-truststore.jks
+      #   trust-store-password: ${VAULT_TRUSTSTORE_PASSWORD:}
+
+      # Dynamic MariaDB credentials via Vault's database secrets engine.
+      # Vault issues a short-lived user and injects spring.datasource.username/password.
+      database:
+        enabled: true
+        role: ${VAULT_DB_ROLE:bottify}   # Vault DB role that mints MariaDB users
+        backend: database
+      # Renew/rotate the leases on those dynamic credentials (ADR-0008 consequences):
+      config:
+        lifecycle:
+          enabled: true
+
+      # --- Simpler alternative: static KV v2 instead of the database engine ---
+      # kv:
+      #   enabled: true
+      #   backend: secret
+      #   application-name: bottify
+      # Then store spring.datasource.username/password as keys under secret/bottify.
+
+  # MariaDB (ADR-0005). The URL is plain config; username/password come from Vault above
+  # (or from the environment when running with the 'local' profile).
   datasource:
     url: ${BOTTIFY_DB_URL:jdbc:mariadb://localhost:3306/bottify}
-    username: ${BOTTIFY_DB_USER:bottify}
+    username: ${BOTTIFY_DB_USER:}
     password: ${BOTTIFY_DB_PASSWORD:}
 
   jpa:
@@ -40,3 +76,15 @@ bottify:
   transcoder:
     ffmpeg-path: ${BOTTIFY_FFMPEG_PATH:ffmpeg}             # transcoder adapter (ADR-0006)
     cache-dir: ${BOTTIFY_TRANSCODE_CACHE:/srv/bottify/cache}
+
+---
+# Local development profile (ADR-0008): Vault runs only in the cloud, so don't require it
+# here. Run with -Dspring.profiles.active=local and provide DB creds via BOTTIFY_DB_USER /
+# BOTTIFY_DB_PASSWORD instead.
+spring:
+  config:
+    activate:
+      on-profile: local
+  cloud:
+    vault:
+      enabled: false
