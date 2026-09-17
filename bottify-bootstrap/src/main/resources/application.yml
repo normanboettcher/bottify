@@ -1,0 +1,42 @@
+# Bottify — base configuration.
+# 12-factor: real values come from the environment/secrets at deploy time (ADR-0007).
+# This file only declares the shape; fill in profiles/env vars as you implement.
+
+spring:
+  application:
+    name: bottify
+
+  # MariaDB (ADR-0005). Credentials injected via environment, never committed.
+  datasource:
+    url: ${BOTTIFY_DB_URL:jdbc:mariadb://localhost:3306/bottify}
+    username: ${BOTTIFY_DB_USER:bottify}
+    password: ${BOTTIFY_DB_PASSWORD:}
+
+  jpa:
+    hibernate:
+      # Flyway owns the schema; JPA only validates it matches the entities.
+      ddl-auto: validate
+    open-in-view: false
+
+  # Schema migrations live in the persistence adapter (classpath:db/migration).
+  flyway:
+    enabled: true
+
+# Observability (architecture overview → Production readiness).
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+# Application-specific knobs, bound by the outbound adapters via @ConfigurationProperties.
+bottify:
+  storage:
+    media-root: ${BOTTIFY_MEDIA_ROOT:/srv/bottify/media}   # filestore adapter (ADR-0006)
+  transcoder:
+    ffmpeg-path: ${BOTTIFY_FFMPEG_PATH:ffmpeg}             # transcoder adapter (ADR-0006)
+    cache-dir: ${BOTTIFY_TRANSCODE_CACHE:/srv/bottify/cache}

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>de.bottify</groupId>
+        <artifactId>bottify</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>bottify-adapter-persistence</artifactId>
+    <name>Bottify :: Adapter :: Persistence</name>
+    <description>
+        Outbound (driven) adapter implementing the repository ports against MariaDB via
+        Spring Data JPA (ADR-0005). Owns the JPA entities, Spring Data repositories, and
+        the Flyway migrations under src/main/resources/db/migration. The database holds
+        metadata only — audio bytes live on disk (see the filestore adapter).
+    </description>
+
+    <dependencies>
+        <dependency>
+            <groupId>de.bottify</groupId>
+            <artifactId>bottify-application</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <!-- Schema versioning (ADR-0005). flyway-mysql is required for the MySQL/MariaDB family. -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-mysql</artifactId>
+        </dependency>
+
+        <!-- MariaDB JDBC driver -->
+        <dependency>
+            <groupId>org.mariadb.jdbc</groupId>
+            <artifactId>mariadb-java-client</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!--
+          When you start writing persistence tests, add Testcontainers to run migrations
+          against a real throwaway MariaDB. Spring Boot 4's BOM does not manage its
+          versions, so import the Testcontainers BOM in the ROOT pom's dependencyManagement:
+              <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>testcontainers-bom</artifactId>
+                <version>...</version><type>pom</type><scope>import</scope>
+              </dependency>
+          then add (test scope) spring-boot-testcontainers, org.testcontainers:mariadb and
+          org.testcontainers:junit-jupiter here.
+        -->
+    </dependencies>
+</project>
