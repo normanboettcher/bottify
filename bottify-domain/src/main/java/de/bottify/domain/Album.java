@@ -41,6 +41,9 @@ public record Album(AlbumId albumId, ArtistId artistId, String title,
         if (discNumber < 1) {
             throw new IllegalArgumentException("discNumber must be positive");
         }
+        if (title.isBlank()) {
+            throw new IllegalArgumentException("title must not be blank");
+        }
     }
 
     public int trackCount() {
