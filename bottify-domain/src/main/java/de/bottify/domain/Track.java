@@ -31,4 +31,20 @@ public record Track(TrackId trackId, String title, Duration duration,
             throw new IllegalArgumentException("title must not be blank");
         }
     }
+
+    /// {@inheritDoc}
+    ///
+    /// Entity values are considered equal if they have the same {@link TrackId}.
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof Track && trackId.equals(((Track) o).trackId);
+    }
+
+    /// {@inheritDoc}
+    ///
+    /// The hash code is based on the {@link TrackId}.
+    @Override
+    public int hashCode() {
+        return trackId.hashCode();
+    }
 }

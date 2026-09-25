@@ -1,6 +1,7 @@
 package de.bottify.domain;
 
 import de.bottify.domain.id.AlbumId;
+import de.bottify.domain.id.ArtistId;
 
 import java.time.Duration;
 import java.util.List;
@@ -9,13 +10,14 @@ import java.util.Objects;
 /// Album record represents a music album with its associated details.
 ///
 /// @param albumId     The unique identifier for the album, represented by {@link AlbumId}.
-/// @param artist      The {@link Artist} who created the album.
+/// @param artistId    The {@link ArtistId} of the artist who created the album.
 /// @param title       The title of the album.
 /// @param releaseDate The release date of the album in a standard format (e.g., YYYY-MM-DD).
 /// @param genre       The {@link Genre} of the album (e.g., Rock, Pop, Jazz, etc.).
 /// @param tracks      A {@link List} of {@link Track} objects representing the tracks in the album.
 /// @param rating      The {@link Rating} of the album.
-public record Album(AlbumId albumId, Artist artist, String title, String releaseDate,
+public record Album(AlbumId albumId, ArtistId artistId, String title,
+                    String releaseDate,
                     Genre genre,
                     List<Track> tracks, Rating rating) {
 
@@ -25,7 +27,7 @@ public record Album(AlbumId albumId, Artist artist, String title, String release
     ///
     /// @throws NullPointerException if any of the parameters are null.
     public Album {
-        Objects.requireNonNull(artist, "artist must not be null");
+        Objects.requireNonNull(artistId, "artistId must not be null");
         Objects.requireNonNull(title, "title must not be null");
         Objects.requireNonNull(releaseDate, "releaseDate must not be null");
         Objects.requireNonNull(genre, "genre must not be null");
@@ -53,5 +55,21 @@ public record Album(AlbumId albumId, Artist artist, String title, String release
     /// @return The total length of the album in minutes as a double.
     public Duration totalDuration() {
         return tracks.stream().map(Track::duration).reduce(Duration.ZERO, Duration::plus);
+    }
+
+    /// {@inheritDoc}
+    ///
+    /// Entity values are considered equal if they have the same {@link AlbumId}.
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof Album && albumId.equals(((Album) o).albumId);
+    }
+
+    /// {@inheritDoc}
+    ///
+    /// The hash code is based on the {@link AlbumId}.
+    @Override
+    public int hashCode() {
+        return albumId.hashCode();
     }
 }
