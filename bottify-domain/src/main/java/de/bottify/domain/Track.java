@@ -25,10 +25,16 @@ public record Track(TrackId trackId, String title, Duration duration,
         Objects.requireNonNull(trackId, "trackId must not be null");
         Objects.requireNonNull(rating, "rating must not be null");
         if (duration.toSeconds() < 0) {
-            throw new IllegalArgumentException("durationInSeconds must not be negative");
+            throw new IllegalArgumentException("duration must not be negative");
         }
         if (title.isBlank()) {
             throw new IllegalArgumentException("title must not be blank");
+        }
+        if (trackNumber < 1) {
+            throw new IllegalArgumentException("trackNumber must be greater than 0");
+        }
+        if (duration.isNegative() || duration.isZero()) {
+            throw new IllegalArgumentException("duration must be positive");
         }
     }
 

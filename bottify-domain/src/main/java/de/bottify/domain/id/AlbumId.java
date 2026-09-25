@@ -1,12 +1,11 @@
 package de.bottify.domain.id;
 
+import java.util.Objects;
 import java.util.UUID;
 
-public record AlbumId(UUID id) {
+public record AlbumId(UUID albumId) {
     public AlbumId {
-        if (id == null) {
-            throw new IllegalArgumentException("AlbumId cannot be null");
-        }
+        Objects.requireNonNull(albumId, "albumId must not be null");
     }
 
     public static AlbumId fromString(String id) {
@@ -15,6 +14,6 @@ public record AlbumId(UUID id) {
 
     @Override
     public String toString() {
-        return id.toString();
+        return albumId.toString();
     }
 }

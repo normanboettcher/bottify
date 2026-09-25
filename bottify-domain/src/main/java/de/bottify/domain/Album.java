@@ -4,6 +4,7 @@ import de.bottify.domain.id.AlbumId;
 import de.bottify.domain.id.ArtistId;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 
@@ -15,13 +16,12 @@ import java.util.Objects;
 /// @param releaseDate The release date of the album in a standard format (e.g., YYYY-MM-DD).
 /// @param genre       The {@link Genre} of the album (e.g., Rock, Pop, Jazz, etc.).
 /// @param tracks      A {@link List} of {@link Track} objects representing the tracks in the album.
+///                    Can be empty if the album has no tracks or tracks are added later.
 /// @param rating      The {@link Rating} of the album.
 public record Album(AlbumId albumId, ArtistId artistId, String title,
-                    String releaseDate,
+                    LocalDate releaseDate,
                     Genre genre,
-                    List<Track> tracks, Rating rating) {
-
-    private static final int SIXTY_MINUTES_IN_SECONDS = 60;
+                    List<Track> tracks, Rating rating, int discNumber) {
 
     /// Constructor for the Album record that ensures all fields are non-null.
     ///
@@ -32,27 +32,24 @@ public record Album(AlbumId albumId, ArtistId artistId, String title,
         Objects.requireNonNull(releaseDate, "releaseDate must not be null");
         Objects.requireNonNull(genre, "genre must not be null");
         Objects.requireNonNull(rating, "rating must not be null");
+        Objects.requireNonNull(releaseDate, "releaseDate must not be null");
         tracks = List.copyOf(Objects.requireNonNull(tracks, "tracks must not be null"));
 
         if (tracks.isEmpty()) {
             throw new IllegalArgumentException("tracks must not be empty");
         }
-        if (title.isEmpty()) {
-            throw new IllegalArgumentException("title must not be empty");
-        }
-        if (releaseDate.isEmpty()) {
-            throw new IllegalArgumentException("releaseDate must not be empty");
+        if (discNumber < 1) {
+            throw new IllegalArgumentException("discNumber must be positive");
         }
     }
 
-    public int size() {
+    public int trackCount() {
         return this.tracks.size();
     }
 
-    /// Calculates the total length of the album in minutes by summing the durations ]
-    /// of all tracks.
+    /// Calculates the total length of the album  by summing the durations of all tracks.
     ///
-    /// @return The total length of the album in minutes as a double.
+    /// @return The total length of the album.
     public Duration totalDuration() {
         return tracks.stream().map(Track::duration).reduce(Duration.ZERO, Duration::plus);
     }
