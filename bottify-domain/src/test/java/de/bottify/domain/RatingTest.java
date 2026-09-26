@@ -7,7 +7,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-public class RatingTest {
+class RatingTest {
 
     @ParameterizedTest
     @ValueSource(ints = {Rating.MIN, Rating.MAX})

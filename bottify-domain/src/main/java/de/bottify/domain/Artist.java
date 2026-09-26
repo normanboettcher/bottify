@@ -28,7 +28,7 @@ public record Artist(ArtistId artistId, String name, Rating rating) {
     /// Entity values are considered equal if they have the same {@link ArtistId}.
     @Override
     public boolean equals(Object o) {
-        return o instanceof Artist && artistId.equals(((Artist) o).artistId);
+        return o instanceof Artist other && artistId.equals(other.artistId);
     }
 
     /// {@inheritDoc}

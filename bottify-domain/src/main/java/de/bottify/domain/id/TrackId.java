@@ -1,20 +1,20 @@
 package de.bottify.domain.id;
 
+import java.util.Objects;
 import java.util.UUID;
 
-public record TrackId(UUID id) {
+public record TrackId(UUID trackId) {
     public TrackId {
-        if (id == null) {
-            throw new IllegalArgumentException("TrackId cannot be null");
-        }
+        Objects.requireNonNull(trackId, "trackId must not be null");
     }
 
-    public static TrackId fromString(String id) {
-        return new TrackId(UUID.fromString(id));
+    public static TrackId fromString(String trackId) {
+        Objects.requireNonNull(trackId, "trackId must not be null");
+        return new TrackId(UUID.fromString(trackId));
     }
 
     @Override
     public String toString() {
-        return id.toString();
+        return trackId.toString();
     }
 }
