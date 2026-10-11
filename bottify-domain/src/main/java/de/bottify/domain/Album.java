@@ -17,6 +17,10 @@ import java.util.Objects;
 /// @param genre       The {@link Genre} of the album (e.g., Rock, Pop, Jazz, etc.).
 /// @param tracks      A {@link List} of {@link Track} objects representing the tracks in the album.
 ///                    Can be empty if the album has no tracks or tracks are added later.
+///                    Tracks of an Album are sorted by disc number and track number,
+///                    with the identifier as a final tiebreaker so the ordering is
+///                    total and deterministic for mis-tagged rips that share a disc/track number.
+///                    {@link Track#BY_POSITION}
 /// @param rating      The {@link Rating} of the album.
 public record Album(AlbumId albumId, ArtistId artistId, String title,
                     LocalDate releaseDate,
@@ -34,18 +38,22 @@ public record Album(AlbumId albumId, ArtistId artistId, String title,
         Objects.requireNonNull(rating, "rating must not be null");
         Objects.requireNonNull(releaseDate, "releaseDate must not be null");
         Objects.requireNonNull(albumId, "albumId must not be null");
-        tracks = List.copyOf(Objects.requireNonNull(tracks, "tracks must not be null"));
+        // List.copyOf rejects null elements; Stream.toList() would accept them.
+        tracks = List.copyOf(Objects.requireNonNull(tracks, "tracks must not be null"))
+                .stream().sorted(Track.BY_POSITION)
+                .toList();
 
         if (title.isBlank()) {
             throw new IllegalArgumentException("title must not be blank");
         }
     }
 
+    /// Returns the number of tracks in the album.
     public int trackCount() {
         return this.tracks.size();
     }
 
-    /// Calculates the total length of the album  by summing the durations of all tracks.
+    /// Calculates the total length of the album by summing the durations of all tracks.
     ///
     /// @return The total length of the album.
     public Duration totalDuration() {

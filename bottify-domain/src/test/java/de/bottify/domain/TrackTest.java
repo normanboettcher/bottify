@@ -6,7 +6,10 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.time.Duration;
+import java.util.List;
+import java.util.TreeSet;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -147,7 +150,41 @@ class TrackTest {
                 .hasMessageContaining("discNumber must be positive");
     }
 
+    @Test
+    void by_position_orders_by_disc_then_track_number() {
+        // given
+        var d1t1 = givenTrack(1, 1);
+        var d1t3 = givenTrack(1, 3);
+        var d2t1 = givenTrack(2, 1);
+
+        // when
+        var sorted = Stream.of(d2t1, d1t3, d1t1).sorted(Track.BY_POSITION).toList();
+
+        // then
+        assertThat(sorted).containsExactly(d1t1, d1t3, d2t1);
+    }
+
+    @Test
+    void by_position_keeps_distinct_tracks_that_share_a_position() {
+        // given
+        var first = givenTrack(1, 1);
+        var second = givenTrack(1, 1);
+
+        // when
+        var sorted = new TreeSet<>(Track.BY_POSITION);
+        sorted.addAll(List.of(first, second));
+
+        // then
+        assertThat(Track.BY_POSITION.compare(first, second)).isNotZero();
+        assertThat(sorted).hasSize(2);
+    }
+
     private static TrackId givenTrackId() {
         return new TrackId(UUID.randomUUID());
+    }
+
+    private static Track givenTrack(int discNumber, int trackNumber) {
+        return new Track(givenTrackId(), "Test Track", Duration.ofSeconds(180),
+                new Rating(3), trackNumber, discNumber);
     }
 }

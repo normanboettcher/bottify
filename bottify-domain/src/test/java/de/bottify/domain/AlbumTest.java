@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static java.util.UUID.randomUUID;
@@ -20,9 +21,9 @@ class AlbumTest {
     void returns_track_count() {
         // given
         var tracks = List.of(
-                givenTrack(java.time.Duration.ofSeconds(120), 1),
-                givenTrack(java.time.Duration.ofSeconds(180), 2),
-                givenTrack(java.time.Duration.ofSeconds(240), 3));
+                givenTrack(Duration.ofSeconds(120), 1, 1),
+                givenTrack(Duration.ofSeconds(180), 2, 1),
+                givenTrack(Duration.ofSeconds(240), 3, 1));
         var album = givenAlbum(new AlbumId(randomUUID()), "Test Album", new Rating(3), tracks);
 
         // when/then
@@ -33,13 +34,13 @@ class AlbumTest {
     void returns_total_duration_of_all_tracks() {
         // given
         var tracks = List.of(
-                givenTrack(java.time.Duration.ofSeconds(120), 1),
-                givenTrack(java.time.Duration.ofSeconds(180), 2),
-                givenTrack(java.time.Duration.ofSeconds(240), 3));
+                givenTrack(Duration.ofSeconds(120), 1, 1),
+                givenTrack(Duration.ofSeconds(180), 2, 1),
+                givenTrack(Duration.ofSeconds(240), 3, 1));
         var album = givenAlbum(new AlbumId(randomUUID()), "Test Album", new Rating(3), tracks);
 
         // when/then
-        assertThat(album.totalDuration()).isEqualTo(java.time.Duration.ofSeconds(540));
+        assertThat(album.totalDuration()).isEqualTo(Duration.ofSeconds(540));
     }
 
     @Test
@@ -61,7 +62,7 @@ class AlbumTest {
         assertThat(album.albumId()).isEqualTo(albumId);
         assertThat(album.artistId()).isEqualTo(artistId);
         assertThat(album.title()).isEqualTo("Test Album");
-        assertThat(album.releaseDate()).isEqualTo(java.time.LocalDate.of(2024, 1, 1));
+        assertThat(album.releaseDate()).isEqualTo(LocalDate.of(2024, 1, 1));
         assertThat(album.genre()).isEqualTo(Genre.HOERSPIEL);
         assertThat(album.tracks()).containsExactly(track);
         assertThat(album.rating()).isEqualTo(rating);
@@ -259,6 +260,29 @@ class AlbumTest {
         assertThat(album.totalDuration()).isEqualTo(Duration.ZERO);
     }
 
+    @Test
+    void sorts_tracks_by_disc_then_track_number() {
+        // given
+        var d1t1 = givenTrack(Duration.ofSeconds(180), 1, 1);
+        var d1t3 = givenTrack(Duration.ofSeconds(30), 3, 1);
+        var d2t1 = givenTrack(Duration.ofSeconds(120), 1, 2);
+
+        // when
+        var album = givenAlbum(new AlbumId(randomUUID()), "Test Album", new Rating(3),
+                List.of(d2t1, d1t3, d1t1));
+
+        // then
+        assertThat(album.tracks()).containsExactly(d1t1, d1t3, d2t1);
+    }
+
+    @Test
+    void throws_on_null_track_element() {
+        // when/then
+        assertThatThrownBy(() -> givenAlbum(new AlbumId(randomUUID()), "Test Album", new Rating(3),
+                Arrays.asList(givenTrack(), null)))
+                .isInstanceOf(NullPointerException.class);
+    }
+
     private static Track givenTrack() {
         return new Track(new TrackId(randomUUID()), "Test Track",
                 Duration.ofSeconds(180),
@@ -267,7 +291,7 @@ class AlbumTest {
     }
 
     private static Album givenAlbum(AlbumId albumId, String title, Rating rating) {
-        return givenAlbum(albumId, title, rating, java.util.Collections.singletonList(givenTrack()));
+        return givenAlbum(albumId, title, rating, List.of(givenTrack()));
     }
 
     private static Album givenAlbum(AlbumId albumId, String title, Rating rating, List<Track> tracks) {
@@ -278,10 +302,10 @@ class AlbumTest {
                 rating);
     }
 
-    private static Track givenTrack(java.time.Duration duration, int trackNumber) {
+    private static Track givenTrack(Duration duration, int trackNumber, int discNumber) {
         return new Track(new TrackId(randomUUID()), "Test Track",
                 duration,
                 new Rating(3),
-                trackNumber, 1);
+                trackNumber, discNumber);
     }
 }

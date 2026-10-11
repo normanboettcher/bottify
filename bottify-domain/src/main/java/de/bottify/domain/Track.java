@@ -19,15 +19,20 @@ public record Track(TrackId trackId, String title, Duration duration,
                     Rating rating, int trackNumber,
                     int discNumber) {
 
-    private static final Comparator<Track> BY_POSITION = Comparator
+    /// Orders tracks by disc, then track number, with the identifier as a final
+    /// tiebreaker so the ordering is total and deterministic for mis-tagged rips
+    /// that share a disc/track number.
+    public static final Comparator<Track> BY_POSITION = Comparator
             .comparingInt(Track::discNumber)
             .thenComparingInt(Track::trackNumber)
             .thenComparing(t -> t.trackId().trackId());
 
     /// Constructor for the Track record that ensures all fields are non-null and valid.
     ///
-    /// @throws NullPointerException     if the title is null.
-    /// @throws IllegalArgumentException if the duration is negative.
+    /// @throws NullPointerException     if any of the parameters are null.
+    /// @throws IllegalArgumentException if the duration is negative or zero,
+    ///                                  if the title is blank, or if the track number
+    ///                                  or disc number are less than 1.
     public Track {
         Objects.requireNonNull(title, "title must not be null");
         Objects.requireNonNull(duration, "duration must not be null");
@@ -63,5 +68,4 @@ public record Track(TrackId trackId, String title, Duration duration,
     public int hashCode() {
         return trackId.hashCode();
     }
-
 }

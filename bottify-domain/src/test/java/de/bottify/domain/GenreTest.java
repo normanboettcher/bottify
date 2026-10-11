@@ -4,7 +4,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import java.util.Set;
+import java.util.HashSet;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -67,14 +68,10 @@ class GenreTest {
     }
 
     @Test
-    void should_throw_on_duplicates_set() {
-        // given
-        var genre1 = new Genre("ROCK");
-        var genre2 = new Genre("rock");
-        var genre3 = new Genre("Pop");
-
-        // when
-        assertThatThrownBy(() -> Set.of(genre1, genre2, genre3))
-                .isInstanceOf(IllegalArgumentException.class);
+    void collapses_case_variants_into_one_set_element() {
+        assertThat(new HashSet<>(List.of(new Genre("ROCK"),
+                new Genre("rock"),
+                new Genre("Pop"))))
+                .hasSize(2);
     }
 }

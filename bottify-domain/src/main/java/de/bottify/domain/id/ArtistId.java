@@ -8,9 +8,9 @@ public record ArtistId(UUID artistId) {
         Objects.requireNonNull(artistId, "artistId must not be null");
     }
 
-    public static ArtistId fromString(String id) {
-        Objects.requireNonNull(id, "artistId must not be null");
-        return new ArtistId(UUID.fromString(id));
+    public static ArtistId fromString(String artistId) {
+        Objects.requireNonNull(artistId, "artistId must not be null");
+        return new ArtistId(UUID.fromString(artistId));
     }
 
     @Override
