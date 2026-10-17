@@ -25,7 +25,7 @@ public record Track(TrackId trackId, String title, Duration duration,
     public static final Comparator<Track> BY_POSITION = Comparator
             .comparingInt(Track::discNumber)
             .thenComparingInt(Track::trackNumber)
-            .thenComparing(t -> t.trackId().trackId());
+            .thenComparing(t -> t.trackId().value());
 
     /// Constructor for the Track record that ensures all fields are non-null and valid.
     ///
