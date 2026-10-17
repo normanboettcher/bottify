@@ -63,16 +63,17 @@ A single deployable app, cleanly separated inside:
 ```mermaid
 flowchart TB
     Net([Internet]) -->|443 HTTPS| Caddy
-    subgraph host[VPS · Docker Compose]
-      Caddy[Caddy<br/>reverse proxy + auto-TLS]
-      Caddy -->|:8080| App[bottify<br/>Spring Boot · non-root]
-      App --> PG[(mariadb:11)]
-      App -.reads.-> V1[[vol: media / FLAC]]
-      PG --> V2[[vol: pgdata]]
-      Backup[restic · nightly] -.-> V1
-      Backup -.-> PG
-    end
-    Backup -->|encrypted| Off[(Off-site storage)]
+subgraph host[Rocky Linux VM]
+Caddy[Caddy<br/>reverse proxy + auto-TLS]
+Caddy -->|:8080|App[bottify<br/>Spring Boot non-root]
+subgraph compose[VPS Docker Compose]
+App -. reads .-> V1[[vol: media / FLAC]]
+Backup[restic · nightly] -.-> V1
+end
+Backup -.-> PG
+App --> PG[(mariadb:11)]
+Backup -->|encrypted|Off[(Off-site storage)]
+end
 ```
 
 | Service | Image | Role | Exposed |
@@ -86,22 +87,143 @@ See [ADR-0007](../adr/0007-docker-compose-caddy-deployment.md).
 
 ## Data model
 
+The domain model lives in `bottify-domain` (`de.bottify.domain`) as plain, framework-free
+Java records. It's made of two aggregates, **Artist** and **Album**, plus immutable value
+objects.
+
 ```mermaid
-erDiagram
-    ARTIST ||--o{ ALBUM : has
-    ALBUM  ||--o{ TRACK : contains
-    APPUSER ||--o{ PLAYLIST : owns
-    APPUSER ||--o{ PLAY_EVENT : logs
-    TRACK  ||--o{ PLAY_EVENT : "played in"
-    ARTIST { uuid id  string name  string sort_name }
-    ALBUM  { uuid id  string title  int year  string cover_art_path }
-    TRACK  { uuid id  string title  int track_no  int duration_s  string codec  int bitrate  string file_path  bigint size_bytes }
-    PLAYLIST { uuid id  string name }
-    PLAY_EVENT { uuid id  timestamp played_at }
+classDiagram
+  direction LR
+
+  class Artist {
+<<AggregateRoot>>
++ArtistId artistId
++String name
++Rating rating
+}
+
+class Album {
+<<AggregateRoot>>
++AlbumId albumId
++ArtistId artistId
++String title
++LocalDate releaseDate
++Genre genre
++List~Track~ tracks
++Rating rating
++trackCount() int
++totalDuration() Duration
+}
+
+class Track {
+<<Entity>>
++TrackId trackId
++String title
++Duration duration
++Rating rating
++int trackNumber
++int discNumber
++Comparator~Track~ BY_POSITION$
+}
+
+class Genre {
+<<ValueObject>>
++String name
++Genre HOERSPIEL$
++key() String
+ }
+
+class Rating {
+<<ValueObject>>
++int value
++int MIN$ = 0
++int MAX$ = 5
++compareTo(Rating) int
+ }
+
+class ArtistId {
+<<ValueObject>>
++UUID artistId
++fromString(String)$ ArtistId
+}
+
+class AlbumId {
+<<ValueObject>>
++UUID albumId
++fromString(String)$ AlbumId
+}
+
+class TrackId {
+<<ValueObject>>
++UUID trackId
++fromString(String)$ TrackId
+}
+
+Album "1" *-- "0..*" Track: tracks, ordered BY_POSITION
+Album "0..*" ..> "1" Artist: references by artistId
+
+Artist *-- "1" ArtistId : identity
+Album *-- "1" AlbumId : identity
+Track *-- "1" TrackId : identity
+
+Album --> "1" Genre
+Artist --> "1" Rating
+Album --> "1" Rating
+Track --> "1" Rating
 ```
 
-Playlist membership is a join table with track ordering (omitted above for clarity).
-Metadata lives in MariaDB; audio stays on disk — [ADR-0005](../adr/0005-mariadb-metadata-files-on-disk.md).
+How to read it:
+
+- **Album is the consistency boundary for its tracks.** `Track` has no back-reference to
+  its album, so you can only get to a track through its `Album` (composition, ◆). The album
+  keeps `tracks` immutable and always sorted by `Track.BY_POSITION` (disc → track number →
+  id as a tiebreaker), and computes `trackCount()` and `totalDuration()` from them.
+- **Artist and Album are separate aggregates.** An album points to its artist **by
+  identity** (`ArtistId`), not by object reference (dashed arrow). Neither side holds a
+  collection of the other, so each can be loaded and saved on its own.
+- **Entities compare by identity.** `Artist`, `Album` and `Track` override
+  `equals`/`hashCode` to compare only their typed id (`ArtistId`, `AlbumId`, `TrackId`, each
+  a UUID wrapper).
+- **Value objects compare by value and check their own inputs.** `Rating` is limited to
+  0–5 (0 = unrated). `Genre` compares case-insensitively via `key()` but keeps the original
+  spelling for display.
+
+Technical file metadata (file path, codec, bitrate, size, cover-art path) is not part of
+the domain model yet. Metadata lives in MariaDB and audio stays on disk —
+[ADR-0005](../adr/0005-mariadb-metadata-files-on-disk.md).
+
+### Planned (not implemented yet)
+
+Users, playlists and listening history aren't in `bottify-domain` yet. This is a sketch
+of how they are expected to attach to the catalog. Like `Album → Artist`, they reference
+tracks by `TrackId` rather than holding `Track` objects:
+
+```mermaid
+classDiagram
+  direction LR
+
+  class AppUser {
+    <<planned>>
+  }
+  class Playlist {
+    <<planned>>
+    +String name
+    +List~TrackId~ entries
+  }
+  class PlayEvent {
+    <<planned>>
+    +TrackId trackId
+    +Instant playedAt
+  }
+  class TrackId {
+    <<Value Object>>
+  }
+
+  AppUser "1" --> "0..*" Playlist : owns
+  AppUser "1" --> "0..*" PlayEvent : logs
+  Playlist ..> "0..*" TrackId : ordered entries
+  PlayEvent ..> "1" TrackId : played track
+```
 
 ## Getting CDs in
 
