@@ -22,7 +22,7 @@ rather than repeating the justifications.
 | Search | Deferred to a dedicated Elasticsearch service (later phase) | — |
 | Delivery | Store lossless, transcode on the fly (ffmpeg) | [ADR-0006](../adr/0006-lossless-storage-on-the-fly-transcode.md) |
 | Deployment | Docker Compose behind Caddy (auto-TLS) | [ADR-0007](../adr/0007-docker-compose-caddy-deployment.md) |
-| DB secrets | Fetched from remote HashiCorp Vault via Spring Cloud Vault | [ADR-0008](../adr/0008-mariadb-credentials-from-vault.md) |
+| DB secrets | Fetched from remote HashiCorp Vault via Spring Cloud Vault | [ADR-0008](../adr/0007-mariadb-credentials-from-vault.md) |
 
 > **Note:** Because Bottify uses a custom API rather than Subsonic, the web browser is the
 > **only** client. Third-party player apps won't work unless a Subsonic-compatible adapter
@@ -139,7 +139,7 @@ see [ADR-0005](../adr/0005-mariadb-metadata-files-on-disk.md).
 - **Config** — 12-factor; all config via env, nothing environment-specific in the image.
 - **Secrets** — MariaDB credentials are pulled at startup from a remote HashiCorp Vault
   (Spring Cloud Vault, wired in `bottify-bootstrap`), never committed or baked in; the
-  persistence adapter is unaware — [ADR-0008](../adr/0008-mariadb-credentials-from-vault.md).
+  persistence adapter is unaware — [ADR-0008](../adr/0007-mariadb-credentials-from-vault.md).
 - **Reliability** — `restart: unless-stopped`, health-check-driven restarts, resource
   limits so a runaway transcode can't OOM the box.
 
