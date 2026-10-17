@@ -21,7 +21,7 @@ message queue.
 
 "Cloud-native" is honored through practices that fit the scale: immutable container
 images, declarative configuration, 12-factor config, health checks, and one-command
-reproducible deploys (see [ADR-0007](0007-docker-compose-caddy-deployment.md)).
+reproducible deploys.
 
 ## Consequences
 
